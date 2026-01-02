@@ -3,41 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pomega Nöbet Sistemi</title>
+    <title>Pomega Canlı Nöbet Listesi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', system-ui, sans-serif; }
-        .hero { background: #004085; color: white; padding: 25px 0; text-align: center; border-radius: 0 0 25px 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .search-area { max-width: 500px; margin: -20px auto 20px; padding: 0 15px; }
-        .search-input { border-radius: 50px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.1); padding: 14px 25px; font-weight: 500; }
-        .list-card { background: white; border-radius: 15px; margin: 0 15px 40px; box-shadow: 0 0 25px rgba(0,0,0,0.05); overflow: hidden; }
-        .table-responsive { max-height: 75vh; overflow: auto; }
-        table { border-collapse: separate; border-spacing: 0; width: 100%; }
-        th, td { border: 1px solid #e9ecef; padding: 12px 8px; text-align: center; white-space: nowrap; }
-        .sticky-col { position: sticky; left: 0; background: white; z-index: 10; font-weight: bold; border-right: 2px solid #004085; min-width: 180px; text-align: left; }
-        thead th { background: #004085 !important; color: white; position: sticky; top: 0; z-index: 11; font-size: 13px; }
-        thead th.sticky-col { z-index: 12; }
-        .n1 { background: #dc3545 !important; color: white; border-radius: 6px; font-weight: bold; padding: 2px 8px; }
-        .n2 { background: #ffc107 !important; color: #000; border-radius: 6px; font-weight: bold; padding: 2px 8px; }
-        .weekend { background-color: #fff5f5 !important; }
-        tr:hover td { background-color: #f8f9ff !important; }
-        #status-info { font-size: 0.85rem; margin-top: 8px; display: block; }
+        :root { --pomega: #004085; }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        .hero { background: var(--pomega); color: white; padding: 25px; text-align: center; border-radius: 0 0 20px 20px; }
+        .search-area { max-width: 450px; margin: -20px auto 20px; padding: 0 15px; }
+        .search-input { border-radius: 50px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1); padding: 12px 20px; }
+        .main-card { background: white; border-radius: 15px; margin: 0 15px 40px; box-shadow: 0 0 20px rgba(0,0,0,0.05); overflow: hidden; }
+        .table-responsive { max-height: 70vh; overflow: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th, td { border: 1px solid #eee; padding: 10px; text-align: center; font-size: 14px; white-space: nowrap; }
+        .sticky-col { position: sticky; left: 0; background: white; z-index: 10; font-weight: bold; border-right: 3px solid var(--pomega); min-width: 170px; text-align: left; }
+        thead th { background: var(--pomega) !important; color: white; position: sticky; top: 0; z-index: 11; font-size: 12px; }
+        .n1 { background: #dc3545 !important; color: white; font-weight: bold; border-radius: 4px; padding: 2px 6px; }
+        .n2 { background: #ffc107 !important; color: black; font-weight: bold; border-radius: 4px; padding: 2px 6px; }
+        .n12 { background: linear-gradient(to right, #dc3545 50%, #ffc107 50%) !important; color: white; border-radius: 4px; padding: 2px 6px; }
+        .weekend { background-color: #fff1f1 !important; }
+        #loader { padding: 50px; text-align: center; font-weight: bold; color: var(--pomega); }
     </style>
 </head>
 <body>
 
 <div class="hero">
-    <h2 class="fw-bold m-0">POMEGA OCAK 2026</h2>
-    <span id="status-info" class="badge bg-light text-dark">Lütfen bekleyin, veriler senkronize ediliyor...</span>
+    <h3 class="fw-bold m-0">POMEGA OCAK 2026</h3>
+    <small id="update-stat">Veriler Excel'den çekiliyor...</small>
 </div>
 
 <div class="search-area">
-    <input type="text" id="searchInput" class="form-control search-input" placeholder="Personel adı ile ara..." onkeyup="filter()">
+    <input type="text" id="q" class="form-control search-input" placeholder="İsim ara..." onkeyup="filter()">
 </div>
 
-<div class="list-card">
-    <div class="table-responsive">
-        <table id="mainTable">
+<div class="main-card">
+    <div id="loader">Tablo Hazırlanıyor...</div>
+    <div class="table-responsive" id="table-wrap" style="display:none;">
+        <table id="nobetTable">
             <thead id="head"></thead>
             <tbody id="body"></tbody>
         </table>
@@ -46,76 +47,71 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 <script>
-    const CSV_URL = 'https://docs.google.com/spreadsheets/d/1THPuchO7TrhvUmDLHNlEvgX_5Mt8J0L0L0RTERIjaL763MY4Hr3Tt1SWIxkbjgjDoum-N-PyrcO_KC/export?format=csv&gid=1602899784';
+    // Sizin verdiğiniz CSV linki
+    const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTHPuchO7TrhvUmDLHNlEvgX_5Mt8J0L0L0RTERIjaL763MY4Hr3Tt1SWIxkbjgjDoum-N-PyrcO_KC/pub?gid=1602899784&single=true&output=csv';
 
-    function init() {
-        Papa.parse(CSV_URL, {
+    function load() {
+        Papa.parse(url, {
             download: true,
-            complete: (results) => {
-                if(results.data && results.data.length > 2) {
-                    processData(results.data);
-                } else {
-                    document.getElementById('status-info').innerText = "Hata: Veri formatı geçersiz.";
-                }
-            },
-            error: () => {
-                document.getElementById('status-info').innerText = "Bağlantı hatası: Google Sheets erişilemiyor.";
+            complete: function(results) {
+                const data = results.data;
+                if(data.length > 0) build(data);
             }
         });
     }
 
-    function processData(rows) {
+    function build(data) {
         const head = document.getElementById('head');
         const body = document.getElementById('body');
-        
-        // 1. Satır: Gün Numaraları, 2. Satır: Gün İsimleri
-        let hContent = '<tr><th class="sticky-col">PERSONEL ADI</th>';
+
+        // Başlık satırı (Günler ve İsimler)
+        let h = '<tr><th class="sticky-col">PERSONEL</th>';
         for(let j=1; j<=31; j++) {
-            let num = rows[0][j] || j;
-            let day = rows[1][j] || '';
-            let isWk = (day === 'cmt' || day === 'paz');
-            hContent += `<th class="${isWk ? 'weekend' : ''}">${num}<br><small>${day}</small></th>`;
+            let dayNum = data[0][j] || j;
+            let dayName = data[1][j] || '';
+            let isWk = (dayName.toLowerCase() === 'cmt' || dayName.toLowerCase() === 'paz');
+            h += `<th class="${isWk ? 'weekend' : ''}">${dayNum}<br><small>${dayName}</small></th>`;
         }
-        head.innerHTML = hContent + '</tr>';
+        head.innerHTML = h + '</tr>';
 
-        // 3. Satırdan itibaren personel verileri
-        let bContent = '';
-        for(let i=2; i < rows.length; i++) {
-            let pName = rows[i][0] ? rows[i][0].trim() : '';
-            if(pName === '' || pName === 'Ocak 26') continue;
+        // Personel satırları (3. satırdan başla)
+        let b = '';
+        for(let i=2; i<data.length; i++) {
+            let name = data[i][0] ? data[i][0].trim() : '';
+            if(name === "" || name === "Ocak 26" || name === "rt") continue;
 
-            bContent += '<tr>';
-            bContent += `<td class="sticky-col">${pName}</td>`;
-            
+            b += '<tr>';
+            b += `<td class="sticky-col">${name}</td>`;
             for(let j=1; j<=31; j++) {
-                let val = rows[i][j] ? rows[i][j].trim() : '';
-                let dayName = rows[1][j] || '';
-                let wkClass = (dayName === 'cmt' || dayName === 'paz') ? 'weekend' : '';
+                let val = data[i][j] ? data[i][j].trim() : '';
+                let dayName = data[1][j] || '';
+                let isWk = (dayName.toLowerCase() === 'cmt' || dayName.toLowerCase() === 'paz');
                 
-                let displayVal = val;
-                if(val === '1') displayVal = '<span class="n1">1</span>';
-                if(val === '2') displayVal = '<span class="n2">2</span>';
-                if(val === '12') displayVal = '<span class="n1">12</span>';
-                
-                bContent += `<td class="${wkClass}">${displayVal}</td>`;
+                let badge = val;
+                if(val === '1') badge = `<span class="n1">1</span>`;
+                else if(val === '2') badge = `<span class="n2">2</span>`;
+                else if(val === '12') badge = `<span class="n12">12</span>`;
+
+                b += `<td class="${isWk ? 'weekend' : ''}">${badge}</td>`;
             }
-            bContent += '</tr>';
+            b += '</tr>';
         }
-        body.innerHTML = bContent;
-        document.getElementById('status-info').className = "badge bg-success text-white";
-        document.getElementById('status-info').innerText = "Liste Aktif ve Güncel";
+        body.innerHTML = b;
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('table-wrap').style.display = 'block';
+        document.getElementById('update-stat').innerText = "Excel ile tam senkronize";
     }
 
     function filter() {
-        let term = document.getElementById('searchInput').value.toUpperCase();
-        let trs = document.getElementById('body').getElementsByTagName('tr');
-        for (let tr of trs) {
-            let name = tr.getElementsByTagName('td')[0].innerText.toUpperCase();
-            tr.style.display = name.includes(term) ? "" : "none";
+        let val = document.getElementById('q').value.toUpperCase();
+        let rows = document.getElementById('body').getElementsByTagName('tr');
+        for (let r of rows) {
+            let name = r.getElementsByTagName('td')[0].innerText.toUpperCase();
+            r.style.display = name.includes(val) ? "" : "none";
         }
     }
 
-    window.onload = init;
+    window.onload = load;
 </script>
 </body>
 </html>
