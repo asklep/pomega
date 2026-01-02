@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Güncel Nöbet Listesi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .container { margin-top: 50px; }
+        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px 15px 0 0; padding: 20px; }
+        .table { margin-bottom: 0; }
+        .table thead { background-color: #f1f3f5; }
+        tr:hover { background-color: #f8f9fa; transition: 0.3s; }
+        .badge-nobet { background-color: #e9ecef; color: #495057; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <div class="header-bg text-center">
+            <h2>📋 Güncel Nöbet Listesi</h2>
+            <p id="last-update" class="small mb-0">Değişiklikler anlık olarak yansır</p>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="nobetTable" class="table table-hover align-middle">
+                    </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script>
+    // 1. ADIMDA KOPYALADIĞINIZ CSV LİNKİNİ BURAYA YAPIŞTIRIN
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTHPuchO7TrhvUmDLHNlEvgX_5Mt8J0L0L0RTERIjaL763MY4Hr3Tt1SWIxkbjgjDoum-N-PyrcO_KC/pub?gid=1602899784&single=true&output=csv';
+
+    function loadData() {
+        Papa.parse(sheetUrl, {
+            download: true,
+            header: true,
+            complete: function(results) {
+                const data = results.data;
+                let table = document.getElementById('nobetTable');
+                
+                // Başlıkları oluştur
+                let headers = Object.keys(data[0]);
+                let headerHtml = '<thead><tr>';
+                headers.forEach(header => headerHtml += `<th class="p-3">${header}</th>`);
+                headerHtml += '</tr></thead><tbody>';
+                
+                // Satırları oluştur
+                data.forEach(row => {
+                    headerHtml += '<tr>';
+                    headers.forEach(header => {
+                        headerHtml += `<td class="p-3">${row[header] || '-'}</td>`;
+                    });
+                    headerHtml += '</tr>';
+                });
+                
+                headerHtml += '</tbody>';
+                table.innerHTML = headerHtml;
+            }
+        });
+    }
+
+    window.onload = loadData;
+</script>
+</body>
+</html>
