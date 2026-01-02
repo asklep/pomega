@@ -7,9 +7,6 @@
 
   <title>Zeynep Çil · Veri Görünümü</title>
   <meta name="description" content="Google Sheets (CSV) kaynağından şık ve hızlı bir tablo görünümü." />
-  <meta property="og:title" content="Zeynep Çil · Veri Görünümü" />
-  <meta property="og:description" content="Filtreleme, sıralama, sayfalama ve kolon görünürlüğü." />
-  <meta property="og:type" content="website" />
   <meta name="theme-color" content="#111827" />
 
   <style>
@@ -27,7 +24,7 @@
         radial-gradient(1000px 700px at 105% 20%, rgba(6,182,212,.16), transparent 50%),
         var(--bg);
       color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue", "Apple Color Emoji","Segoe UI Emoji";
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue";
     }
 
     .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
@@ -86,7 +83,6 @@
     tbody tr:hover td { background: rgba(124,58,237,.06); }
 
     .chips { display:flex; flex-wrap:wrap; gap:6px; margin: 8px 0 12px; }
-    .chip { padding:5px 9px; border:1px solid var(--border); border-radius:999px; font-size:.85rem; }
     .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); }
 
     .grid { display:grid; gap:10px; grid-template-columns: 1fr; }
@@ -102,6 +98,14 @@
 
     .stat { font-feature-settings:"tnum" 1, "lnum" 1; letter-spacing:.2px; }
     .src { word-break: break-all; }
+
+    /* Hata kutusu */
+    .error {
+      display:none; margin-top:10px; padding:10px 12px; border-radius:12px;
+      border:1px solid #ef4444; color:#ef4444; background: rgba(239,68,68,.08);
+    }
+    .error.show { display:block; }
+    .error pre { white-space: pre-wrap; margin:8px 0 0 0; font-size:.9rem; }
   </style>
 </head>
 <body>
@@ -117,6 +121,7 @@
       <div class="toolbar">
         <input id="q" class="input" placeholder="Ara / filtrele…" />
         <button id="refresh" class="btn">Yenile</button>
+        <button id="openCsv" class="btn ghost" title="CSV’yi yeni sekmede aç">CSV’yi Aç</button>
         <button id="copy" class="btn ghost" title="Bağlantıyı panoya kopyala">Linki Kopyala</button>
         <button id="download" class="btn primary" title="Tabloyu CSV indir">CSV İndir</button>
       </div>
@@ -131,19 +136,22 @@
           <span class="pill"><span style="width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg, var(--brand), var(--brand-2));display:inline-block"></span> Canlı veri</span>
         </div>
 
-        <!-- YATAY SCROLL ALANI -->
         <div class="table-wrap" id="wrap">
           <table id="tbl"><thead></thead><tbody></tbody></table>
+        </div>
+
+        <div id="err" class="error">
+          <strong>Veri yüklenemedi.</strong>
+          <pre id="errDetails"></pre>
+          <button id="showConsoleTip" class="btn">Konsol ipucu</button>
         </div>
 
         <div class="footer">
           <div class="muted src">Kaynak: <code id="src"></code></div>
           <div class="pagination">
-            <!-- Yatay kaydırma kısa yolları -->
             <button class="btn" id="scrollLeft" title="Sola kaydır">◀ sütun</button>
             <button class="btn" id="scrollRight" title="Sağa kaydır">sütun ▶</button>
 
-            <!-- Sayfalama -->
             <button class="btn" id="prev" title="Önceki sayfa">‹</button>
             <span class="pill"><span id="pageNow">1</span> / <span id="pageTotal">1</span></span>
             <button class="btn" id="next" title="Sonraki sayfa">›</button>
@@ -160,3 +168,5 @@
       <!-- SIDEBAR -->
       <aside class="sidebar">
         <section class="card">
+          <div class="muted" style="margin-bottom:8px;">Sütun Görünürlüğü</div>
+          <div id="colToggles" class="checkboxes"></div>
