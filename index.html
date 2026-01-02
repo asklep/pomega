@@ -10,9 +10,9 @@
         body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 50px; }
         .hero { background: var(--pomega-dark); color: white; padding: 25px; text-align: center; border-radius: 0 0 25px 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
         .main-card { background: white; border-radius: 15px; margin: 20px; box-shadow: 0 0 25px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; }
-        .table-responsive { max-height: 85vh; overflow: auto; }
+        .table-responsive { max-height: 85vh; overflow: auto; position: relative; }
         table { border-collapse: separate; border-spacing: 0; width: 100%; }
-        th, td { border: 1px solid #dee2e6; padding: 12px 8px; text-align: center; vertical-align: middle; white-space: nowrap; }
+        th, td { border: 1px solid #dee2e6; padding: 10px 8px; text-align: center; vertical-align: middle; white-space: nowrap; }
         
         /* Personel Sütunu Sabitleme */
         .sticky-col { 
@@ -26,7 +26,7 @@
             background: var(--pomega-blue) !important; color: white; 
             position: sticky; top: 0; z-index: 11; font-size: 14px;
         }
-        thead tr.day-names th { top: 45px; font-size: 11px; background: #0056b3 !important; } /* Gün isimleri için ikinci katman */
+        thead tr.day-names th { top: 41px; font-size: 11px; background: #0056b3 !important; }
         thead th.sticky-col { z-index: 12; }
 
         /* Nöbet Renkleri */
@@ -56,70 +56,4 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
-<script>
-    const csvLink = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTHPuchO7TrhvUmDLHNlEvgX_5Mt8J0L0L0RTERIjaL763MY4Hr3Tt1SWIxkbjgjDoum-N-PyrcO_KC/pub?gid=1602899784&single=true&output=csv';
-
-    function load() {
-        Papa.parse(csvLink, {
-            download: true,
-            complete: function(results) {
-                if (results.data && results.data.length > 0) {
-                    render(results.data);
-                }
-            }
-        });
-    }
-
-    function render(data) {
-        const head = document.getElementById('head');
-        const body = document.getElementById('body');
-
-        // Üst Başlık (Tarih Sayıları)
-        let row1 = '<tr><th class="sticky-col">PERSONEL LİSTESİ</th>';
-        // Alt Başlık (Gün İsimleri)
-        let row2 = '<tr class="day-names"><th class="sticky-col" style="top:45px">OCAK 2026</th>';
-
-        for(let j=1; j<=31; j++) {
-            let num = data[0][j] || j;
-            let dayName = (data[1][j] || '').toLowerCase();
-            let isWk = (dayName === 'cmt' || dayName === 'paz');
-            
-            row1 += `<th class="${isWk ? 'weekend' : ''}">${num}</th>`;
-            row2 += `<th class="${isWk ? 'weekend' : ''}">${dayName.toUpperCase()}</th>`;
-        }
-        head.innerHTML = row1 + '</tr>' + row2 + '</tr>';
-
-        // Personel Satırları
-        let bHtml = '';
-        for(let i=2; i<data.length; i++) {
-            let name = data[i][0] ? data[i][0].trim() : '';
-            if(!name || name === "Ocak 26" || name === "rt") continue;
-
-            bHtml += '<tr>';
-            bHtml += `<td class="sticky-col">${name}</td>`;
-            for(let j=1; j<=31; j++) {
-                let val = data[i][j] ? data[i][j].trim() : '';
-                let dayName = (data[1][j] || '').toLowerCase();
-                let isWk = (dayName === 'cmt' || dayName === 'paz');
-                
-                let content = val;
-                if(val === '1') content = `<span class="n1">1</span>`;
-                else if(val === '2') content = `<span class="n2">2</span>`;
-                else if(val === '12') content = `<span class="n12">12</span>`;
-
-                bHtml += `<td class="${isWk ? 'weekend' : ''}">${content}</td>`;
-            }
-            bHtml += '</tr>';
-        }
-        body.innerHTML = bHtml;
-        
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('wrap').style.display = 'block';
-    }
-
-    window.onload = load;
-</script>
-
-</body>
-</html>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.
