@@ -1,59 +1,172 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pomega Ocak 2026 Nöbet Listesi</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        :root { --pomega-blue: #004085; --pomega-dark: #002d5a; }
-        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 50px; }
-        .hero { background: var(--pomega-dark); color: white; padding: 25px; text-align: center; border-radius: 0 0 25px 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .main-card { background: white; border-radius: 15px; margin: 20px; box-shadow: 0 0 25px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; }
-        .table-responsive { max-height: 85vh; overflow: auto; position: relative; }
-        table { border-collapse: separate; border-spacing: 0; width: 100%; }
-        th, td { border: 1px solid #dee2e6; padding: 10px 8px; text-align: center; vertical-align: middle; white-space: nowrap; }
-        
-        /* Personel Sütunu Sabitleme */
-        .sticky-col { 
-            position: sticky; left: 0; background: #fff !important; z-index: 10; 
-            font-weight: bold; border-right: 3px solid var(--pomega-blue); 
-            min-width: 200px; text-align: left; 
-        }
-        
-        /* Başlıklar */
-        thead th { 
-            background: var(--pomega-blue) !important; color: white; 
-            position: sticky; top: 0; z-index: 11; font-size: 14px;
-        }
-        thead tr.day-names th { top: 41px; font-size: 11px; background: #0056b3 !important; }
-        thead th.sticky-col { z-index: 12; }
-
-        /* Nöbet Renkleri */
-        .n1 { background: #d9534f !important; color: white; font-weight: bold; border-radius: 4px; padding: 3px 8px; display: inline-block; min-width: 25px; }
-        .n2 { background: #f0ad4e !important; color: black; font-weight: bold; border-radius: 4px; padding: 3px 8px; display: inline-block; min-width: 25px; }
-        .n12 { background: linear-gradient(to right, #d9534f 50%, #f0ad4e 50%) !important; color: white; border-radius: 4px; padding: 3px 8px; display: inline-block; }
-        .weekend { background-color: #fff1f1 !important; color: #d9534f; }
-        
-        tr:hover td { background-color: #f8f9ff !important; }
-        #loading { padding: 50px; text-align: center; font-weight: bold; color: var(--pomega-blue); }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zeynep Çil – Tablo Yayını</title>
+  <meta name="description" content="Google Sheets verisinin CSV çıktısından oluşturulmuş temiz tablo görünümü." />
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; margin: 24px; }
+    header { display:flex; align-items:center; justify-content:space-between; margin-bottom: 14px; }
+    h1 { font-size: 1.3rem; margin: 0; }
+    .controls { display:flex; gap:10px; align-items:center; }
+    .search { padding: 8px 10px; width: 280px; border: 1px solid #d1d5db; border-radius: 6px; }
+    .btn { padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; background:#f9fafb; cursor:pointer; }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    .table-wrap { overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+    th { background: #f3f4f6; text-align: left; font-weight: 600; position: sticky; top: 0; }
+    tr:nth-child(even) td { background: #fcfcfc; }
+    .note { color: #6b7280; font-size: 0.9rem; margin-top: 10px; }
+    .badge { font-size:.85rem; color:#374151; background:#eef2ff; border:1px solid #c7d2fe; padding:4px 8px; border-radius:999px; }
+    @media (prefers-color-scheme: dark) {
+      body { background:#0b0c0f; color:#e5e7eb; }
+      .search, .btn { border-color:#374151; background:#111827; color:#e5e7eb; }
+      .table-wrap { border-color:#374151; }
+      th, td { border-bottom-color:#1f2937; }
+      th { background:#111827; }
+      tr:nth-child(even) td { background:#0f172a; }
+      .note { color:#9ca3af; }
+      .badge { color:#cbd5e1; background:#0f172a; border-color:#1f2937; }
+    }
+  </style>
 </head>
 <body>
-
-<div class="hero">
-    <h2 class="m-0">📅 POMEGA OCAK 2026</h2>
-    <p class="small m-0 mt-2 opacity-75">Güncel Nöbet Çizelgesi (Anlık Güncellenir)</p>
-</div>
-
-<div class="main-card">
-    <div id="loading">Veriler Excel'den çekiliyor, lütfen bekleyin...</div>
-    <div class="table-responsive" id="wrap" style="display:none;">
-        <table>
-            <thead id="head"></thead>
-            <tbody id="body"></tbody>
-        </table>
+  <header>
+    <h1>Tablo Yayını</h1>
+    <div class="controls">
+      <input id="search" class="search" placeholder="Ara/filtrele..." />
+      <button id="refresh" class="btn" title="Veriyi yenile">Yenile</button>
     </div>
-</div>
+  </header>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.
+  <div class="table-wrap">
+    <table id="tbl"><thead></thead><tbody></tbody></table>
+  </div>
+  <p class="note">
+    <span class="badge">Kaynak</span>
+    <code id="src"></code>
+  </p>
+
+  <script>
+    // --- Ayarlar ---
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTHPuchO7TrhvUmDLHNlEvgX_5Mt8J0L0L0RTERIjaL763MY4Hr3Tt1SWIxkbjgjDoum-N-PyrcO_KC/pub?gid=1602899784&single=true&output=csv';
+
+    // Basit ve sağlam CSV çözümleyici (tırnaklı hücreleri destekler)
+    function parseCSV(text) {
+      const rows = [];
+      let cur = '', inQuotes = false, row = [];
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i+1];
+        if (ch === '"') {
+          if (inQuotes && next === '"') { cur += '"'; i++; }
+          else { inQuotes = !inQuotes; }
+        } else if (ch === ',' && !inQuotes) {
+          row.push(cur); cur = '';
+        } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+          if (cur.length || row.length) { row.push(cur); cur = ''; rows.push(row); row = []; }
+        } else {
+          cur += ch;
+        }
+      }
+      if (cur.length || row.length) { row.push(cur); rows.push(row); }
+      // Boş satırları filtrele
+      return rows.filter(r => r.some(c => (c||'').trim() !== ''));
+    }
+
+    function renderTable(data) {
+      const table = document.getElementById('tbl');
+      const thead = table.querySelector('thead');
+      const tbody = table.querySelector('tbody');
+      thead.innerHTML = '';
+      tbody.innerHTML = '';
+      if (!data.length) return;
+
+      const header = data[0];
+      const trHead = document.createElement('tr');
+      header.forEach((h, i) => {
+        const th = document.createElement('th');
+        th.textContent = h || `Sütun ${i+1}`;
+        th.style.cursor = 'pointer';
+        th.title = 'Sırala';
+        th.addEventListener('click', () => sortBy(i));
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+
+      for (let i = 1; i < data.length; i++) {
+        const tr = document.createElement('tr');
+        data[i].forEach(cell => {
+          const td = document.createElement('td');
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+    }
+
+    let originalData = [];
+    let currentData = [];
+    let sortState = { col: -1, dir: 1 };
+
+    function sortBy(colIndex) {
+      if (sortState.col === colIndex) sortState.dir *= -1; else { sortState.col = colIndex; sortState.dir = 1; }
+      const header = currentData[0];
+      const rows = currentData.slice(1).sort((a,b) => {
+        const av = a[colIndex] || ''; const bv = b[colIndex] || '';
+        const an = parseFloat(av.replace(/[^0-9.,-]/g,''));
+        const bn = parseFloat(bv.replace(/[^0-9.,-]/g,''));
+        const aIsNum = !isNaN(an) && av.match(/[0-9]/);
+        const bIsNum = !isNaN(bn) && bv.match(/[0-9]/);
+        if (aIsNum && bIsNum) return (an - bn) * sortState.dir;
+        return av.localeCompare(bv, 'tr', { sensitivity: 'base' }) * sortState.dir;
+      });
+      currentData = [header].concat(rows);
+      renderTable(currentData);
+    }
+
+    async function loadCSV(force = false) {
+      try {
+        document.getElementById('src').textContent = CSV_URL;
+        const url = force ? CSV_URL + '&t=' + Date.now() : CSV_URL; // cache bypass
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error('CSV yüklenemedi: ' + res.status);
+        const text = await res.text();
+        originalData = parseCSV(text);
+        currentData = originalData;
+        renderTable(currentData);
+        attachSearch();
+      } catch (err) {
+        console.error(err);
+        const tbody = document.querySelector('#tbl tbody');
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 99;
+        td.textContent = 'Veri yüklenirken hata oluştu: ' + err.message;
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      }
+    }
+
+    function attachSearch() {
+      const input = document.getElementById('search');
+      input.addEventListener('input', (e) => {
+        const q = e.target.value.toLowerCase();
+        const filtered = [originalData[0]].concat(
+          originalData.slice(1).filter(row => row.some(cell => (String(cell || '')).toLowerCase().includes(q)))
+        );
+        currentData = filtered;
+        renderTable(currentData);
+      });
+    }
+
+    document.getElementById('refresh').addEventListener('click', () => loadCSV(true));
+    loadCSV();
+  </script>
+</body>
+</html>
+``
