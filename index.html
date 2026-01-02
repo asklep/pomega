@@ -3,113 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pomega Nöbet Listesi</title>
+    <title>Pomega Nöbet Sistemi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --pomega-blue: #0056b3; }
-        body { background-color: #f4f4f9; font-family: sans-serif; }
-        .header { background: var(--pomega-blue); color: white; padding: 20px; text-align: center; border-radius: 0 0 20px 20px; }
-        .search-box { margin: -20px auto 20px; max-width: 500px; }
-        .search-box input { border-radius: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: none; padding: 12px 20px; }
-        .table-container { background: white; border-radius: 15px; box-shadow: 0 0 15px rgba(0,0,0,0.05); margin: 20px; overflow: hidden; }
-        .table-responsive { max-height: 75vh; overflow: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #eee; position: sticky; top: 0; z-index: 10; padding: 10px; font-size: 12px; border: 1px solid #ddd; }
-        td { padding: 8px; border: 1px solid #eee; text-align: center; font-size: 14px; }
-        .fixed-name { position: sticky; left: 0; background: white; z-index: 5; font-weight: bold; text-align: left; min-width: 150px; border-right: 2px solid #ddd; }
-        .n1 { background: #ff4d4d !important; color: white; font-weight: bold; border-radius: 4px; }
-        .n2 { background: #ffcc00 !important; color: black; font-weight: bold; border-radius: 4px; }
-        .weekend { background-color: #fff0f0; }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        .hero { background: #0056b3; color: white; padding: 30px 0; text-align: center; border-radius: 0 0 20px 20px; }
+        .search-container { max-width: 500px; margin: -25px auto 20px; padding: 0 15px; }
+        .search-input { border-radius: 30px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); padding: 12px 25px; }
+        
+        .main-card { background: white; border-radius: 15px; margin: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.05); overflow: hidden; }
+        .table-responsive { overflow-x: auto; max-height: 70vh; }
+        
+        table { border-collapse: separate; border-spacing: 0; width: 100%; }
+        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: center; white-space: nowrap; }
+        
+        /* Personel İsmi Sabitleme */
+        .sticky-col { 
+            position: sticky; left: 0; background: white; z-index: 10; 
+            min-width: 160px; text-align: left; font-weight: bold; border-right: 2px solid #0056b3;
+        }
+        thead th { background: #0056b3 !important; color: white; position: sticky; top: 0; z-index: 11; }
+        thead th.sticky-col { z-index: 12; }
+
+        /* Renkler */
+        .n1 { background-color: #ff4d4d !important; color: white; border-radius: 4px; font-weight: bold; }
+        .n2 { background-color: #ffcc00 !important; color: black; border-radius: 4px; font-weight: bold; }
+        .weekend { background-color: #fff0f0 !important; }
+        tr:hover td { background-color: #f1f4ff; }
+        #status-msg { font-size: 0.9rem; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h2>Pomega Nöbet Listesi</h2>
-    <p id="status">Veriler yükleniyor...</p>
+<div class="hero">
+    <h2 class="fw-bold">POMEGA OCAK 2026</h2>
+    <div id="status-msg" class="badge bg-warning text-dark">Veriler yükleniyor...</div>
 </div>
 
-<div class="container search-box">
-    <input type="text" id="searchInput" class="form-control" placeholder="İsim ara..." onkeyup="filter()">
+<div class="search-container">
+    <input type="text" id="q" class="form-control search-input" placeholder="Personel ismi yazın..." onkeyup="ara()">
 </div>
 
-<div class="table-container">
+<div class="main-card">
     <div class="table-responsive">
-        <table id="nobetTable">
-            <thead id="thead"></thead>
-            <tbody id="tbody"></tbody>
+        <table id="t">
+            <thead id="th"></thead>
+            <tbody id="tb"></tbody>
         </table>
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 <script>
-    const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTHPuchO7TrhvUmDLHNlEvgX_5Mt8J0L0L0RTERIjaL763MY4Hr3Tt1SWIxkbjgjDoum-N-PyrcO_KC/pub?gid=1602899784&single=true&output=csv';
+    const link = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTHPuchO7TrhvUmDLHNlEvgX_5Mt8J0L0L0RTERIjaL763MY4Hr3Tt1SWIxkbjgjDoum-N-PyrcO_KC/pub?gid=1602899784&single=true&output=csv';
 
-    function loadData() {
-        Papa.parse(url, {
+    function basla() {
+        Papa.parse(link, {
             download: true,
-            header: false,
-            complete: function(results) {
-                if (results.data && results.data.length > 0) {
-                    render(results.data);
-                    document.getElementById('status').innerText = "Ocak 2026 (Güncel)";
-                } else {
-                    document.getElementById('status').innerText = "Veri bulunamadı!";
+            complete: (r) => {
+                if(r.data.length > 0) {
+                    ciz(r.data);
+                    document.getElementById('status-msg').className = "badge bg-success";
+                    document.getElementById('status-msg').innerText = "Liste Güncel";
                 }
             },
-            error: function(err) {
-                document.getElementById('status').innerText = "Hata: Veri çekilemedi.";
-                console.error(err);
+            error: (e) => {
+                document.getElementById('status-msg').innerText = "Hata: Sayfayı yenileyin.";
             }
         });
     }
 
-    function render(data) {
-        const thead = document.getElementById('thead');
-        const tbody = document.getElementById('tbody');
+    function ciz(data) {
+        const th = document.getElementById('th');
+        const tb = document.getElementById('tb');
 
-        // Başlık (Günler)
-        let h = '<tr><th class="fixed-name">PERSONEL ADI</th>';
-        for (let j = 1; j <= 31; j++) {
-            let gunNo = data[0][j] || j;
-            let gunAdi = data[1][j] || '';
-            let wk = (gunAdi === 'cmt' || gunAdi === 'paz') ? 'weekend' : '';
-            h += `<th class="${wk}">${gunNo}<br>${gunAdi}</th>`;
+        // Başlıklar (Satır 0 ve 1)
+        let hHtml = '<tr><th class="sticky-col">PERSONEL</th>';
+        for(let j=1; j<=31; j++) {
+            let g = data[0][j] || j;
+            let a = data[1][j] || '';
+            hHtml += `<th>${g}<br><small>${a}</small></th>`;
         }
-        h += '</tr>';
-        thead.innerHTML = h;
+        th.innerHTML = hHtml + '</tr>';
 
-        // Satırlar
-        let b = '';
-        for (let i = 2; i < data.length; i++) {
-            if (!data[i][0]) continue;
-            b += '<tr>';
-            b += `<td class="fixed-name">${data[i][0]}</td>`;
-            for (let j = 1; j <= 31; j++) {
-                let val = data[i][j] ? data[i][j].trim() : '';
-                let cl = '';
-                if(val === '1') cl = 'n1';
-                if(val === '2') cl = 'n2';
-                let gunAdi = data[1][j] || '';
-                let wk = (gunAdi === 'cmt' || gunAdi === 'paz') ? 'weekend' : '';
-                b += `<td class="${wk} ${cl}">${val}</td>`;
+        // Personeller (Satır 2'den itibaren)
+        let bHtml = '';
+        for(let i=2; i<data.length; i++) {
+            if(!data[i][0] || data[i][0].length < 2) continue;
+            
+            bHtml += '<tr>';
+            bHtml += `<td class="sticky-col">${data[i][0]}</td>`;
+            
+            for(let j=1; j<=31; j++) {
+                let v = data[i][j] ? data[i][j].trim() : '';
+                let a = data[1][j] || '';
+                let cl = (a === 'cmt' || a === 'paz') ? 'weekend' : '';
+                
+                let s = v;
+                if(v == '1') s = `<div class="n1">1</div>`;
+                if(v == '2') s = `<div class="n2">2</div>`;
+                if(v == '12') s = `<div class="n1">12</div>`; // Bazı hücrelerde 12 gördüm
+
+                bHtml += `<td class="${cl}">${s}</td>`;
             }
-            b += '</tr>';
+            bHtml += '</tr>';
         }
-        tbody.innerHTML = b;
+        tb.innerHTML = bHtml;
     }
 
-    function filter() {
-        let val = document.getElementById('searchInput').value.toUpperCase();
-        let rows = document.getElementById('tbody').getElementsByTagName('tr');
-        for (let i = 0; i < rows.length; i++) {
-            let name = rows[i].getElementsByTagName('td')[0].innerText;
-            rows[i].style.display = name.toUpperCase().includes(val) ? "" : "none";
+    function ara() {
+        let val = document.getElementById('q').value.toUpperCase();
+        let rows = document.getElementById('tb').getElementsByTagName('tr');
+        for (let r of rows) {
+            let n = r.getElementsByTagName('td')[0].innerText.toUpperCase();
+            r.style.display = n.includes(val) ? "" : "none";
         }
     }
 
-    window.onload = loadData;
+    window.onload = basla;
 </script>
+
 </body>
 </html>
