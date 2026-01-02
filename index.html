@@ -2,171 +2,20 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <title>Zeynep Çil · Veri Görünümü</title>
-  <meta name="description" content="Google Sheets (CSV) kaynağından şık ve hızlı bir tablo görünümü." />
-  <meta name="theme-color" content="#111827" />
-
-  <style>
-    :root{ --bg:#0b0c0f; --card:#0f1221; --muted:#a1a1aa; --text:#e5e7eb; --border:#1f2937; --brand:#7c3aed; --brand-2:#06b6d4; }
-    :root{ color-scheme: light dark; }
-    @media (prefers-color-scheme: light){
-      :root{ --bg:#ffffff; --card:#ffffff; --muted:#6b7280; --text:#111827; --border:#e5e7eb; --brand:#7c3aed; --brand-2:#06b6d4; }
-    }
-
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background:
-        radial-gradient(1400px 800px at 10% -10%, rgba(124,58,237,.18), transparent 60%),
-        radial-gradient(1000px 700px at 105% 20%, rgba(6,182,212,.16), transparent 50%),
-        var(--bg);
-      color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue";
-    }
-
-    .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
-    header { display:flex; align-items:center; justify-content:space-between; gap: 12px; margin-bottom: 18px; }
-    .title { display:flex; align-items:center; gap:10px; }
-    .logo {
-      width: 36px; height:36px; border-radius: 10px;
-      background: linear-gradient(135deg, var(--brand), var(--brand-2));
-      box-shadow: 0 8px 28px rgba(124,58,237,.35), 0 6px 18px rgba(6,182,212,.25);
-    }
-    h1 { font-size: 1.35rem; line-height:1.2; margin:0; letter-spacing:.2px; }
-
-    .toolbar { display:flex; flex-wrap:wrap; gap:8px; }
-    .btn, .input, .select {
-      border:1px solid var(--border); background: rgba(255,255,255,.02);
-      color:var(--text); padding:10px 12px; border-radius:10px; font-size:.95rem; outline:none;
-    }
-    .btn { cursor:pointer; transition: .2s ease transform, .2s ease background, .2s ease border-color; }
-    .btn:hover { transform: translateY(-1px); border-color: #9ca3af; }
-    .btn.primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); border:none; color:#fff; }
-    .btn.ghost { background: transparent; }
-    .input { width: 260px; }
-    .muted { color: var(--muted); font-size:.9rem; }
-
-    .card {
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
-      border: 1px solid var(--border); border-radius:16px; padding: 14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.04);
-    }
-
-    /* --- Scroll/düzen düzeltmeleri --- */
-    .table-wrap {
-      overflow: auto;                      /* hem yatay hem dikey kaydırma */
-      max-height: calc(100vh - 250px);
-      border-radius:12px;
-      border:1px solid var(--border);
-    }
-    table {
-      width: max-content;                  /* içerik kadar genişle */
-      min-width: 100%;                     /* en az görünüm genişliği */
-      border-collapse: collapse;
-      font-size: .95rem;
-    }
-    thead th {
-      position: sticky; top:0; z-index:2;
-      background: rgba(255,255,255,.04); backdrop-filter: blur(6px);
-      border-bottom: 1px solid var(--border);
-      text-align:left; padding: 12px 12px;
-      white-space: nowrap;                 /* başlıklar tek satır */
-    }
-    thead th.sortable { cursor:pointer; }
-    tbody td {
-      padding: 10px 12px; border-bottom: 1px solid var(--border);
-      white-space: nowrap;                 /* hücreler tek satır → yatay scroll */
-    }
-    tbody tr:hover td { background: rgba(124,58,237,.06); }
-
-    .chips { display:flex; flex-wrap:wrap; gap:6px; margin: 8px 0 12px; }
-    .pill { display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); }
-
-    .grid { display:grid; gap:10px; grid-template-columns: 1fr; }
-    @media (min-width: 860px){ .grid { grid-template-columns: 1fr auto; align-items:start; } }
-
-    .sidebar { display:flex; flex-direction:column; gap:10px; min-width: 240px; }
-    .checkboxes { display:flex; flex-direction:column; gap:6px; padding:10px; border:1px dashed var(--border); border-radius:12px; }
-    .checkboxes label { display:flex; align-items:center; gap:8px; font-size:.92rem; }
-
-    .footer { margin-top: 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-    .pagination { display:flex; gap:6px; align-items:center; }
-    .pagination .btn { padding:8px 10px; }
-
-    .stat { font-feature-settings:"tnum" 1, "lnum" 1; letter-spacing:.2px; }
-    .src { word-break: break-all; }
-
-    /* Hata kutusu */
-    .error {
-      display:none; margin-top:10px; padding:10px 12px; border-radius:12px;
-      border:1px solid #ef4444; color:#ef4444; background: rgba(239,68,68,.08);
-    }
-    .error.show { display:block; }
-    .error pre { white-space: pre-wrap; margin:8px 0 0 0; font-size:.9rem; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <div class="title">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>Zeynep Çil · Veri Görünümü</h1>
-          <div class="muted">Google Sheets CSV kaynağından canlı tablo</div>
-        </div>
-      </div>
-      <div class="toolbar">
-        <input id="q" class="input" placeholder="Ara / filtrele…" />
-        <button id="refresh" class="btn">Yenile</button>
-        <button id="openCsv" class="btn ghost" title="CSV’yi yeni sekmede aç">CSV’yi Aç</button>
-        <button id="copy" class="btn ghost" title="Bağlantıyı panoya kopyala">Linki Kopyala</button>
-        <button id="download" class="btn primary" title="Tabloyu CSV indir">CSV İndir</button>
-      </div>
-    </header>
-
-    <div class="grid">
-      <!-- TABLE CARD -->
-      <section class="card">
-        <div class="chips">
-          <span class="pill stat"><strong id="rowCount">0</strong> satır</span>
-          <span class="pill stat"><strong id="colCount">0</strong> sütun</span>
-          <span class="pill"><span style="width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg, var(--brand), var(--brand-2));display:inline-block"></span> Canlı veri</span>
-        </div>
-
-        <div class="table-wrap" id="wrap">
-          <table id="tbl"><thead></thead><tbody></tbody></table>
-        </div>
-
-        <div id="err" class="error">
-          <strong>Veri yüklenemedi.</strong>
-          <pre id="errDetails"></pre>
-          <button id="showConsoleTip" class="btn">Konsol ipucu</button>
-        </div>
-
-        <div class="footer">
-          <div class="muted src">Kaynak: <code id="src"></code></div>
-          <div class="pagination">
-            <button class="btn" id="scrollLeft" title="Sola kaydır">◀ sütun</button>
-            <button class="btn" id="scrollRight" title="Sağa kaydır">sütun ▶</button>
-
-            <button class="btn" id="prev" title="Önceki sayfa">‹</button>
-            <span class="pill"><span id="pageNow">1</span> / <span id="pageTotal">1</span></span>
-            <button class="btn" id="next" title="Sonraki sayfa">›</button>
-            <select id="pageSize" class="select" title="Sayfa boyutu">
-              <option value="10">10 / s.</option>
-              <option value="25" selected>25 / s.</option>
-              <option value="50">50 / s.</option>
-              <option value="100">100 / s.</option>
-            </select>
-          </div>
-        </div>
-      </section>
-
-      <!-- SIDEBAR -->
-      <aside class="sidebar">
-        <section class="card">
-          <div class="muted" style="margin-bottom:8px;">Sütun Görünürlüğü</div>
-          <div id="colToggles" class="checkboxes"></div>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Veri Görünümü</title>
+<style>
+  :root{ --bg:#0b0c0f; --text:#e5e7eb; --border:#1f2937; --brand:#7c3aed; --brand-2:#06b6d4; }
+  @media(prefers-color-scheme:light){
+    :root{ --bg:#ffffff; --text:#111827; --border:#e5e7eb; }
+  }
+  body{
+    margin:0; background: radial-gradient(1400px 800px at 10% -10%, rgba(124,58,237,.18), transparent 60%),
+    radial-gradient(1000px 700px at 105% 20%, rgba(6,182,212,.16), transparent 50%), var(--bg);
+    color:var(--text); font-family: system-ui, sans-serif; padding:20px;
+  }
+  h1{text-align:center; font-size:1.4rem; margin-bottom:16px;}
+  .table-wrap{overflow:auto; border:1px solid var(--border); border-radius:12px; max-height:80vh;}
+  table{border-collapse:collapse; width:max-content; min-width:100%; font-size:.95rem;}
+  th,td{padding:10px 12px; border-bottom:1px solid var(--border); white-space:nowrap;}
