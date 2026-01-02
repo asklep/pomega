@@ -27,45 +27,32 @@
     }
 
     .container { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
-    header {
-      display:flex; align-items:center; justify-content:space-between; gap: 12px; margin-bottom: 18px;
-    }
+    header { display:flex; align-items:center; justify-content:space-between; gap: 12px; margin-bottom: 18px; }
     .title { display:flex; align-items:center; gap:10px; }
-    .logo {
-      width: 36px; height:36px; border-radius: 10px;
-      background: linear-gradient(135deg, var(--brand), var(--brand-2));
-      box-shadow: 0 8px 28px rgba(124,58,237,.35), 0 6px 18px rgba(6,182,212,.25);
-    }
+    .logo { width: 36px; height:36px; border-radius: 10px; background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            box-shadow: 0 8px 28px rgba(124,58,237,.35), 0 6px 18px rgba(6,182,212,.25); }
     h1 { font-size: 1.35rem; line-height:1.2; margin:0; letter-spacing:.2px; }
 
-    .toolbar {
-      display:flex; flex-wrap:wrap; gap:8px;
-    }
+    .toolbar { display:flex; flex-wrap:wrap; gap:8px; }
     .btn, .input, .select {
       border:1px solid var(--border); background: rgba(255,255,255,.02);
       color:var(--text); padding:10px 12px; border-radius:10px; font-size:.95rem; outline:none;
     }
-    .btn {
-      cursor:pointer; transition: .2s ease transform, .2s ease background, .2s ease border-color;
-    }
+    .btn { cursor:pointer; transition: .2s ease transform, .2s ease background, .2s ease border-color; }
     .btn:hover { transform: translateY(-1px); border-color: #9ca3af; }
     .btn.primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); border:none; color:#fff; }
     .btn.ghost { background: transparent; }
     .input { width: 260px; }
     .muted { color: var(--muted); font-size:.9rem; }
 
-    .card {
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
-      border: 1px solid var(--border); border-radius:16px; padding: 14px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.04);
-    }
+    .card { background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+            border: 1px solid var(--border); border-radius:16px; padding: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.04); }
 
     .table-wrap { overflow:auto; max-height: calc(100vh - 250px); border-radius:12px; border:1px solid var(--border); }
     table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-    thead th {
-      position: sticky; top:0; z-index:2; background: rgba(255,255,255,.04); backdrop-filter: blur(6px);
-      border-bottom: 1px solid var(--border); text-align:left; padding: 12px 12px; white-space: nowrap;
-    }
+    thead th { position: sticky; top:0; z-index:2; background: rgba(255,255,255,.04); backdrop-filter: blur(6px);
+               border-bottom: 1px solid var(--border); text-align:left; padding: 12px 12px; white-space: nowrap; }
     thead th.sortable { cursor:pointer; }
     tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
     tbody tr:hover td { background: rgba(124,58,237,.06); }
@@ -81,3 +68,249 @@
     .checkboxes { display:flex; flex-direction:column; gap:6px; padding:10px; border:1px dashed var(--border); border-radius:12px; }
     .checkboxes label { display:flex; align-items:center; gap:8px; font-size:.92rem; }
 
+    .footer { margin-top: 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .pagination { display:flex; gap:6px; }
+    .pagination .btn { padding:8px 10px; }
+
+    .stat { font-feature-settings:"tnum" 1, "lnum" 1; letter-spacing:.2px; }
+    .src { word-break: break-all; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="title">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Zeynep Çil · Veri Görünümü</h1>
+          <div class="muted">Google Sheets CSV kaynağından canlı tablo</div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <input id="q" class="input" placeholder="Ara / filtrele…" />
+        <button id="refresh" class="btn">Yenile</button>
+        <button id="copy" class="btn ghost" title="Bağlantıyı panoya kopyala">Linki Kopyala</button>
+        <button id="download" class="btn primary" title="Tabloyu CSV indir">CSV İndir</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div class="chips">
+          <span class="pill stat"><strong id="rowCount">0</strong> satır</span>
+          <span class="pill stat"><strong id="colCount">0</strong> sütun</span>
+          <span class="pill"><span style="width:10px;height:10px;border-radius:999px;background:linear-gradient(135deg, var(--brand), var(--brand-2));display:inline-block"></span> Canlı veri</span>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tbl"><thead></thead><tbody></tbody></table>
+        </div>
+
+        <div class="footer">
+          <div class="muted src">Kaynak: <code id="src"></code></div>
+          <div class="pagination">
+            <button class="btn" id="prev">‹</button>
+            <span class="pill"><span id="pageNow">1</span> / <span id="pageTotal">1</span></span>
+            <button class="btn" id="next">›</button>
+            <select id="pageSize" class="select">
+              <option value="10">10 / s.</option>
+              <option value="25" selected>25 / s.</option>
+              <option value="50">50 / s.</option>
+              <option value="100">100 / s.</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="card">
+          <div class="muted" style="margin-bottom:8px;">Sütun Görünürlüğü</div>
+          <div id="colToggles" class="checkboxes"></div>
+        </section>
+        <section class="card">
+          <div class="muted" style="margin-bottom:8px;">İpuçları</div>
+          <ul class="muted" style="margin:0 0 6px 18px; line-height:1.6;">
+            <li>Başlıklara tıklayarak <strong>sırala</strong></li>
+            <li>Arama kutusuyla <strong>anında filtrele</strong></li>
+            <li>Sayfa boyutunu değiştirerek <strong>sayfala</strong></li>
+            <li><strong>Yenile</strong> ile en güncel CSV’yi çek</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTHPuchO7TrhvUmDLHNlEvgX_5Mt8J0L0L0RTERIjaL763MY4Hr3Tt1SWIxkbjgjDoum-N-PyrcO_KC/pub?gid=1602899784&single=true&output=csv";
+
+    let originalData = [];
+    let filteredData = [];
+    let visibleCols = [];
+    let sortState = { col: -1, dir: 1 };
+    let page = 1, pageSize = 25;
+
+    function parseCSV(text) {
+      const rows = [];
+      let cur = '', inQ = false, row = [];
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i], nx = text[i+1];
+        if (ch === '"'){ if(inQ && nx === '"'){ cur+='"'; i++; } else { inQ = !inQ; } }
+        else if (ch === ',' && !inQ){ row.push(cur); cur=''; }
+        else if ((ch === '\n' || ch === '\r') && !inQ){
+          if (cur.length || row.length){ row.push(cur); cur=''; rows.push(row); row=[]; }
+        } else { cur += ch; }
+      }
+      if (cur.length || row.length){ row.push(cur); rows.push(row); }
+      return rows.filter(r => r.some(c => (c||'').trim() !== ''));
+    }
+
+    function fmtNumberLike(a){ const n = parseFloat((a||'').replace(/[^0-9.,-]/g,'')); return isNaN(n) ? null : n; }
+    function naturalCompare(a,b){
+      const an = fmtNumberLike(a), bn = fmtNumberLike(b);
+      if (an !== null && bn !== null) return an - bn;
+      return String(a||'').localeCompare(String(b||''), 'tr', { sensitivity:'base', numeric:true });
+    }
+
+    function buildColToggles(headers){
+      const box = document.getElementById('colToggles'); box.innerHTML = '';
+      headers.forEach((h, i) => {
+        const id = 'col_'+i;
+        const row = document.createElement('label');
+        row.innerHTML = `<input type="checkbox" id="${id}" ${visibleCols[i] ? 'checked':''}/> <span>${h || ('Sütun '+(i+1))}</span>`;
+        row.querySelector('input').addEventListener('change', (e)=>{ visibleCols[i] = e.target.checked; render(); });
+        box.appendChild(row);
+      });
+    }
+
+    function applyFilter(q){
+      if (!q){ filteredData = originalData.slice(); return; }
+      const needle = q.toLowerCase();
+      filteredData = [originalData[0]].concat(
+        originalData.slice(1).filter(row => row.some(cell => String(cell||'').toLowerCase().includes(needle)))
+      );
+    }
+
+    function applySort(){
+      if (sortState.col < 0) return;
+      const header = filteredData[0];
+      const body = filteredData.slice(1).sort((a,b) => {
+        const res = naturalCompare(a[sortState.col], b[sortState.col]);
+        return res * sortState.dir;
+      });
+      filteredData = [header].concat(body);
+    }
+
+    function pagedRows(){
+      const start = (page-1)*pageSize;
+      return filteredData.slice(1).slice(start, start+pageSize);
+    }
+
+    function render(){
+      const table = document.getElementById('tbl');
+      const thead = table.querySelector('thead');
+      const tbody = table.querySelector('tbody');
+      thead.innerHTML = ''; tbody.innerHTML = '';
+
+      if (!filteredData.length) return;
+
+      const headers = filteredData[0];
+      const trH = document.createElement('tr');
+      headers.forEach((h,i) => {
+        if (!visibleCols[i]) return;
+        const th = document.createElement('th');
+        th.textContent = h || ('Sütun '+(i+1));
+        th.classList.add('sortable');
+        th.title = 'Sırala';
+        th.addEventListener('click', () => {
+          if (sortState.col === i) sortState.dir *= -1; else { sortState.col = i; sortState.dir = 1; }
+          applySort(); page = 1; render();
+        });
+        if (sortState.col === i){
+          const arrow = sortState.dir === 1 ? ' ▲' : ' ▼';
+          th.textContent += arrow;
+        }
+        trH.appendChild(th);
+      });
+      thead.appendChild(trH);
+
+      const rows = pagedRows();
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        r.forEach((cell, i) => {
+          if (!visibleCols[i]) return;
+          const td = document.createElement('td'); td.textContent = cell; tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('rowCount').textContent = String(filteredData.length ? (filteredData.length - 1) : 0);
+      document.getElementById('colCount').textContent = String(visibleCols.filter(Boolean).length);
+      const totalPages = Math.max(1, Math.ceil((filteredData.length-1)/pageSize));
+      document.getElementById('pageNow').textContent = String(page);
+      document.getElementById('pageTotal').textContent = String(totalPages);
+      document.getElementById('prev').disabled = (page<=1);
+      document.getElementById('next').disabled = (page>=totalPages);
+    }
+
+    async function loadCSV(force=false){
+      try{
+        const url = force ? (CSV_URL + '&t=' + Date.now()) : CSV_URL;
+        document.getElementById('src').textContent = CSV_URL;
+        const res = await fetch(url, { cache:'no-store' });
+        if(!res.ok) throw new Error('CSV yüklenemedi: '+res.status);
+        const text = await res.text();
+        originalData = parseCSV(text);
+        if (!originalData.length) throw new Error('Boş veri.');
+
+        if (!visibleCols.length) visibleCols = originalData[0].map(()=>true);
+
+        applyFilter('');
+        sortState = { col:-1, dir:1 };
+        page = 1;
+        render();
+
+        buildColToggles(originalData[0]);
+
+      } catch(err){
+        console.error(err);
+        const tbody = document.querySelector('#tbl tbody');
+        tbody.innerHTML = '';
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 99;
+        td.textContent = 'Hata: ' + err.message;
+        tr.appendChild(td); tbody.appendChild(tr);
+      }
+    }
+
+    document.getElementById('q').addEventListener('input', (e)=>{ applyFilter(e.target.value); applySort(); page=1; render(); });
+    document.getElementById('prev').addEventListener('click', ()=>{ if(page>1){ page--; render(); } });
+    document.getElementById('next').addEventListener('click', ()=>{
+      const totalPages = Math.max(1, Math.ceil((filteredData.length-1)/pageSize));
+      if(page<totalPages){ page++; render(); }
+    });
+    document.getElementById('pageSize').addEventListener('change', (e)=>{ pageSize = parseInt(e.target.value,10)||25; page=1; render(); });
+    document.getElementById('refresh').addEventListener('click', ()=> loadCSV(true));
+    document.getElementById('copy').addEventListener('click', async ()=>{
+      try{
+        await navigator.clipboard.writeText(location.href);
+        const btn = document.getElementById('copy'); const prev = btn.textContent; btn.textContent = 'Kopyalandı ✓'; setTimeout(()=> btn.textContent=prev,1200);
+      }catch{}
+    });
+    document.getElementById('download').addEventListener('click', async ()=>{
+      if (!filteredData.length) return;
+      const visibleIdx = visibleCols.map((v,i)=> v ? i : -1).filter(i=>i>=0);
+      const rows = [filteredData[0]].concat(filteredData.slice(1));
+      const csv = rows.map(r => visibleIdx.map(i => {
+        const cell = (r[i] ?? '').toString().replace(/"/g,'""');
+        return /[",\n\r]/.test(cell) ? `"${cell}"` : cell;
+      }).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'veri.csv'; a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('src').textContent = CSV_URL;
+    loadCSV();
+  </script>
+</body>
+</html>
