@@ -6,122 +6,116 @@
     <title>Pomega Nöbet Sistemi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-        .hero { background: #0056b3; color: white; padding: 30px 0; text-align: center; border-radius: 0 0 20px 20px; }
-        .search-container { max-width: 500px; margin: -25px auto 20px; padding: 0 15px; }
-        .search-input { border-radius: 30px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); padding: 12px 25px; }
-        
-        .main-card { background: white; border-radius: 15px; margin: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.05); overflow: hidden; }
-        .table-responsive { overflow-x: auto; max-height: 70vh; }
-        
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .hero { background: #004085; color: white; padding: 25px 0; text-align: center; border-radius: 0 0 25px 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .search-area { max-width: 500px; margin: -20px auto 20px; padding: 0 15px; }
+        .search-input { border-radius: 50px; border: none; box-shadow: 0 5px 20px rgba(0,0,0,0.1); padding: 14px 25px; font-weight: 500; }
+        .list-card { background: white; border-radius: 15px; margin: 0 15px 40px; box-shadow: 0 0 25px rgba(0,0,0,0.05); overflow: hidden; }
+        .table-responsive { max-height: 75vh; overflow: auto; }
         table { border-collapse: separate; border-spacing: 0; width: 100%; }
-        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: center; white-space: nowrap; }
-        
-        /* Personel İsmi Sabitleme */
-        .sticky-col { 
-            position: sticky; left: 0; background: white; z-index: 10; 
-            min-width: 160px; text-align: left; font-weight: bold; border-right: 2px solid #0056b3;
-        }
-        thead th { background: #0056b3 !important; color: white; position: sticky; top: 0; z-index: 11; }
+        th, td { border: 1px solid #e9ecef; padding: 12px 8px; text-align: center; white-space: nowrap; }
+        .sticky-col { position: sticky; left: 0; background: white; z-index: 10; font-weight: bold; border-right: 2px solid #004085; min-width: 180px; text-align: left; }
+        thead th { background: #004085 !important; color: white; position: sticky; top: 0; z-index: 11; font-size: 13px; }
         thead th.sticky-col { z-index: 12; }
-
-        /* Renkler */
-        .n1 { background-color: #ff4d4d !important; color: white; border-radius: 4px; font-weight: bold; }
-        .n2 { background-color: #ffcc00 !important; color: black; border-radius: 4px; font-weight: bold; }
-        .weekend { background-color: #fff0f0 !important; }
-        tr:hover td { background-color: #f1f4ff; }
-        #status-msg { font-size: 0.9rem; margin-top: 10px; }
+        .n1 { background: #dc3545 !important; color: white; border-radius: 6px; font-weight: bold; padding: 2px 8px; }
+        .n2 { background: #ffc107 !important; color: #000; border-radius: 6px; font-weight: bold; padding: 2px 8px; }
+        .weekend { background-color: #fff5f5 !important; }
+        tr:hover td { background-color: #f8f9ff !important; }
+        #status-info { font-size: 0.85rem; margin-top: 8px; display: block; }
     </style>
 </head>
 <body>
 
 <div class="hero">
-    <h2 class="fw-bold">POMEGA OCAK 2026</h2>
-    <div id="status-msg" class="badge bg-warning text-dark">Veriler yükleniyor...</div>
+    <h2 class="fw-bold m-0">POMEGA OCAK 2026</h2>
+    <span id="status-info" class="badge bg-light text-dark">Lütfen bekleyin, veriler senkronize ediliyor...</span>
 </div>
 
-<div class="search-container">
-    <input type="text" id="q" class="form-control search-input" placeholder="Personel ismi yazın..." onkeyup="ara()">
+<div class="search-area">
+    <input type="text" id="searchInput" class="form-control search-input" placeholder="Personel adı ile ara..." onkeyup="filter()">
 </div>
 
-<div class="main-card">
+<div class="list-card">
     <div class="table-responsive">
-        <table id="t">
-            <thead id="th"></thead>
-            <tbody id="tb"></tbody>
+        <table id="mainTable">
+            <thead id="head"></thead>
+            <tbody id="body"></tbody>
         </table>
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 <script>
-    const link = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTHPuchO7TrhvUmDLHNlEvgX_5Mt8J0L0L0RTERIjaL763MY4Hr3Tt1SWIxkbjgjDoum-N-PyrcO_KC/pub?gid=1602899784&single=true&output=csv';
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTHPuchO7TrhvUmDLHNlEvgX_5Mt8J0L0L0RTERIjaL763MY4Hr3Tt1SWIxkbjgjDoum-N-PyrcO_KC/pub?gid=1602899784&single=true&output=csv';
 
-    function basla() {
-        Papa.parse(link, {
+    function init() {
+        Papa.parse(CSV_URL, {
             download: true,
-            complete: (r) => {
-                if(r.data.length > 0) {
-                    ciz(r.data);
-                    document.getElementById('status-msg').className = "badge bg-success";
-                    document.getElementById('status-msg').innerText = "Liste Güncel";
+            complete: (results) => {
+                if(results.data && results.data.length > 2) {
+                    processData(results.data);
+                } else {
+                    document.getElementById('status-info').innerText = "Hata: Veri formatı geçersiz.";
                 }
             },
-            error: (e) => {
-                document.getElementById('status-msg').innerText = "Hata: Sayfayı yenileyin.";
+            error: () => {
+                document.getElementById('status-info').innerText = "Bağlantı hatası: Google Sheets erişilemiyor.";
             }
         });
     }
 
-    function ciz(data) {
-        const th = document.getElementById('th');
-        const tb = document.getElementById('tb');
-
-        // Başlıklar (Satır 0 ve 1)
-        let hHtml = '<tr><th class="sticky-col">PERSONEL</th>';
+    function processData(rows) {
+        const head = document.getElementById('head');
+        const body = document.getElementById('body');
+        
+        // 1. Satır: Gün Numaraları, 2. Satır: Gün İsimleri
+        let hContent = '<tr><th class="sticky-col">PERSONEL ADI</th>';
         for(let j=1; j<=31; j++) {
-            let g = data[0][j] || j;
-            let a = data[1][j] || '';
-            hHtml += `<th>${g}<br><small>${a}</small></th>`;
+            let num = rows[0][j] || j;
+            let day = rows[1][j] || '';
+            let isWk = (day === 'cmt' || day === 'paz');
+            hContent += `<th class="${isWk ? 'weekend' : ''}">${num}<br><small>${day}</small></th>`;
         }
-        th.innerHTML = hHtml + '</tr>';
+        head.innerHTML = hContent + '</tr>';
 
-        // Personeller (Satır 2'den itibaren)
-        let bHtml = '';
-        for(let i=2; i<data.length; i++) {
-            if(!data[i][0] || data[i][0].length < 2) continue;
-            
-            bHtml += '<tr>';
-            bHtml += `<td class="sticky-col">${data[i][0]}</td>`;
+        // 3. Satırdan itibaren personel verileri
+        let bContent = '';
+        for(let i=2; i < rows.length; i++) {
+            let pName = rows[i][0] ? rows[i][0].trim() : '';
+            if(pName === '' || pName === 'Ocak 26') continue;
+
+            bContent += '<tr>';
+            bContent += `<td class="sticky-col">${pName}</td>`;
             
             for(let j=1; j<=31; j++) {
-                let v = data[i][j] ? data[i][j].trim() : '';
-                let a = data[1][j] || '';
-                let cl = (a === 'cmt' || a === 'paz') ? 'weekend' : '';
+                let val = rows[i][j] ? rows[i][j].trim() : '';
+                let dayName = rows[1][j] || '';
+                let wkClass = (dayName === 'cmt' || dayName === 'paz') ? 'weekend' : '';
                 
-                let s = v;
-                if(v == '1') s = `<div class="n1">1</div>`;
-                if(v == '2') s = `<div class="n2">2</div>`;
-                if(v == '12') s = `<div class="n1">12</div>`; // Bazı hücrelerde 12 gördüm
-
-                bHtml += `<td class="${cl}">${s}</td>`;
+                let displayVal = val;
+                if(val === '1') displayVal = '<span class="n1">1</span>';
+                if(val === '2') displayVal = '<span class="n2">2</span>';
+                if(val === '12') displayVal = '<span class="n1">12</span>';
+                
+                bContent += `<td class="${wkClass}">${displayVal}</td>`;
             }
-            bHtml += '</tr>';
+            bContent += '</tr>';
         }
-        tb.innerHTML = bHtml;
+        body.innerHTML = bContent;
+        document.getElementById('status-info').className = "badge bg-success text-white";
+        document.getElementById('status-info').innerText = "Liste Aktif ve Güncel";
     }
 
-    function ara() {
-        let val = document.getElementById('q').value.toUpperCase();
-        let rows = document.getElementById('tb').getElementsByTagName('tr');
-        for (let r of rows) {
-            let n = r.getElementsByTagName('td')[0].innerText.toUpperCase();
-            r.style.display = n.includes(val) ? "" : "none";
+    function filter() {
+        let term = document.getElementById('searchInput').value.toUpperCase();
+        let trs = document.getElementById('body').getElementsByTagName('tr');
+        for (let tr of trs) {
+            let name = tr.getElementsByTagName('td')[0].innerText.toUpperCase();
+            tr.style.display = name.includes(term) ? "" : "none";
         }
     }
 
-    window.onload = basla;
+    window.onload = init;
 </script>
-
 </body>
 </html>
