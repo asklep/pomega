@@ -6,48 +6,48 @@
     <title>Pomega Ocak 2026 Nöbet Listesi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --pomega-dark: #002d5a; --pomega-blue: #004085; }
+        :root { --pomega-blue: #004085; --pomega-dark: #002d5a; }
         body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 50px; }
-        .hero { background: var(--pomega-dark); color: white; padding: 20px; text-align: center; border-radius: 0 0 20px 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .main-card { background: white; border-radius: 12px; margin: 20px; box-shadow: 0 0 20px rgba(0,0,0,0.05); overflow: hidden; }
-        .table-responsive { max-height: 80vh; overflow: auto; }
+        .hero { background: var(--pomega-dark); color: white; padding: 25px; text-align: center; border-radius: 0 0 25px 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .main-card { background: white; border-radius: 15px; margin: 20px; box-shadow: 0 0 25px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; }
+        .table-responsive { max-height: 85vh; overflow: auto; }
         table { border-collapse: separate; border-spacing: 0; width: 100%; }
-        th, td { border: 1px solid #dee2e6; padding: 12px 10px; text-align: center; font-size: 14px; white-space: nowrap; }
+        th, td { border: 1px solid #dee2e6; padding: 12px 8px; text-align: center; vertical-align: middle; white-space: nowrap; }
         
         /* Personel Sütunu Sabitleme */
         .sticky-col { 
-            position: sticky; left: 0; background: white; z-index: 10; 
-            font-weight: bold; border-right: 2px solid var(--pomega-dark); 
-            min-width: 180px; text-align: left; 
+            position: sticky; left: 0; background: #fff !important; z-index: 10; 
+            font-weight: bold; border-right: 3px solid var(--pomega-blue); 
+            min-width: 200px; text-align: left; 
         }
         
+        /* Başlıklar */
         thead th { 
             background: var(--pomega-blue) !important; color: white; 
-            position: sticky; top: 0; z-index: 11; font-size: 12px; 
+            position: sticky; top: 0; z-index: 11; font-size: 14px;
         }
+        thead tr.day-names th { top: 45px; font-size: 11px; background: #0056b3 !important; } /* Gün isimleri için ikinci katman */
         thead th.sticky-col { z-index: 12; }
 
         /* Nöbet Renkleri */
-        .n1 { background: #d9534f !important; color: white; font-weight: bold; border-radius: 4px; padding: 2px 8px; }
-        .n2 { background: #f0ad4e !important; color: black; font-weight: bold; border-radius: 4px; padding: 2px 8px; }
-        .n12 { background: linear-gradient(to right, #d9534f 50%, #f0ad4e 50%) !important; color: white; border-radius: 4px; padding: 2px 8px; }
-        .weekend { background-color: #fff5f5 !important; }
+        .n1 { background: #d9534f !important; color: white; font-weight: bold; border-radius: 4px; padding: 3px 8px; display: inline-block; min-width: 25px; }
+        .n2 { background: #f0ad4e !important; color: black; font-weight: bold; border-radius: 4px; padding: 3px 8px; display: inline-block; min-width: 25px; }
+        .n12 { background: linear-gradient(to right, #d9534f 50%, #f0ad4e 50%) !important; color: white; border-radius: 4px; padding: 3px 8px; display: inline-block; }
+        .weekend { background-color: #fff1f1 !important; color: #d9534f; }
         
-        #loading { padding: 40px; text-align: center; color: var(--pomega-dark); font-weight: bold; }
-        .info-text { text-align: center; font-size: 0.8rem; color: #666; margin-top: 10px; }
+        tr:hover td { background-color: #f8f9ff !important; }
+        #loading { padding: 50px; text-align: center; font-weight: bold; color: var(--pomega-blue); }
     </style>
 </head>
 <body>
 
 <div class="hero">
-    <h3 class="m-0">📅 POMEGA OCAK 2026</h3>
-    <p class="small m-0 mt-1 opacity-75">Güncel Nöbet Çizelgesi</p>
+    <h2 class="m-0">📅 POMEGA OCAK 2026</h2>
+    <p class="small m-0 mt-2 opacity-75">Güncel Nöbet Çizelgesi (Anlık Güncellenir)</p>
 </div>
 
-<div class="info-text">← Listeyi sağa kaydırarak tüm günleri görebilirsiniz →</div>
-
 <div class="main-card">
-    <div id="loading">Liste Excel'den yükleniyor...</div>
+    <div id="loading">Veriler Excel'den çekiliyor, lütfen bekleyin...</div>
     <div class="table-responsive" id="wrap" style="display:none;">
         <table>
             <thead id="head"></thead>
@@ -64,10 +64,9 @@
         Papa.parse(csvLink, {
             download: true,
             complete: function(results) {
-                render(results.data);
-            },
-            error: function() {
-                document.getElementById('loading').innerText = "Bağlantı hatası! Sayfayı yenileyin.";
+                if (results.data && results.data.length > 0) {
+                    render(results.data);
+                }
             }
         });
     }
@@ -76,42 +75,45 @@
         const head = document.getElementById('head');
         const body = document.getElementById('body');
 
-        // Başlık satırını hazırla (Günler)
-        let hHtml = '<tr><th class="sticky-col">PERSONEL LİSTESİ</th>';
+        // Üst Başlık (Tarih Sayıları)
+        let row1 = '<tr><th class="sticky-col">PERSONEL LİSTESİ</th>';
+        // Alt Başlık (Gün İsimleri)
+        let row2 = '<tr class="day-names"><th class="sticky-col" style="top:45px">OCAK 2026</th>';
+
         for(let j=1; j<=31; j++) {
             let num = data[0][j] || j;
-            let day = data[1][j] || '';
-            let isWk = (day.toLowerCase() === 'cmt' || day.toLowerCase() === 'paz');
-            hHtml += `<th class="${isWk ? 'weekend' : ''}">${num}<br><small>${day}</small></th>`;
+            let dayName = (data[1][j] || '').toLowerCase();
+            let isWk = (dayName === 'cmt' || dayName === 'paz');
+            
+            row1 += `<th class="${isWk ? 'weekend' : ''}">${num}</th>`;
+            row2 += `<th class="${isWk ? 'weekend' : ''}">${dayName.toUpperCase()}</th>`;
         }
-        head.innerHTML = hHtml + '</tr>';
+        head.innerHTML = row1 + '</tr>' + row2 + '</tr>';
 
-        // Personel verilerini hazırla
+        // Personel Satırları
         let bHtml = '';
         for(let i=2; i<data.length; i++) {
             let name = data[i][0] ? data[i][0].trim() : '';
-            // Gereksiz başlıkları veya boş satırları atla
             if(!name || name === "Ocak 26" || name === "rt") continue;
 
             bHtml += '<tr>';
             bHtml += `<td class="sticky-col">${name}</td>`;
             for(let j=1; j<=31; j++) {
                 let val = data[i][j] ? data[i][j].trim() : '';
-                let dayName = data[1][j] || '';
-                let isWk = (dayName.toLowerCase() === 'cmt' || dayName.toLowerCase() === 'paz');
+                let dayName = (data[1][j] || '').toLowerCase();
+                let isWk = (dayName === 'cmt' || dayName === 'paz');
                 
-                let badge = val;
-                if(val === '1') badge = `<span class="n1">1</span>`;
-                else if(val === '2') badge = `<span class="n2">2</span>`;
-                else if(val === '12') badge = `<span class="n12">12</span>`;
+                let content = val;
+                if(val === '1') content = `<span class="n1">1</span>`;
+                else if(val === '2') content = `<span class="n2">2</span>`;
+                else if(val === '12') content = `<span class="n12">12</span>`;
 
-                bHtml += `<td class="${isWk ? 'weekend' : ''}">${badge}</td>`;
+                bHtml += `<td class="${isWk ? 'weekend' : ''}">${content}</td>`;
             }
             bHtml += '</tr>';
         }
         body.innerHTML = bHtml;
         
-        // Yükleme ekranını kapat, tabloyu aç
         document.getElementById('loading').style.display = 'none';
         document.getElementById('wrap').style.display = 'block';
     }
